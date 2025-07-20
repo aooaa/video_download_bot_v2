@@ -35,7 +35,7 @@ def sync_youtube_dl(url):
             'format': 'bestvideo[ext=mp4][height<=1600]+bestaudio[ext=m4a]/best[ext=mp4][height<=1600]',
             'outtmpl': '%(title)s.%(ext)s',
             'noplaylist': True,
-            'cookiefile': 'youtube_cookies.text'
+            'cookiefile': 'youtube_cookies.txt'
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             #print('Start Download...')
