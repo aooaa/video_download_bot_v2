@@ -17,14 +17,17 @@ from utils.check_file_size import get_file_size
 - 版本变化
 
 1.使用telethon python api来上传大文件
+
+- 注意
+1.tg定义客户端，每个客户端名称需保持不同，不然会导致缓存失效
 '''
 
 # Replace with your own Telegram bot token
 #bot = telebot.TeleBot(TOKEN)
 bot = AsyncTeleBot(TOKEN)
 
-# 定义客户端
-client = TelegramClient('session_download_bot', api_id, api_hash)
+# tg定义客户端(每个客户端名称需保持不一样)
+client = TelegramClient('test_session_download_bot', api_id, api_hash)
 
 #youtube下载模块
 executor = ThreadPoolExecutor()

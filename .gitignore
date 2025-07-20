@@ -1,5 +1,9 @@
 config.py
 session_download_bot.session
+session_download_bot*
+test_session_download_bot.session
+*.session
+test_session_download_bot*
 youtube_cookies.txt
 logs/
 old_main/
