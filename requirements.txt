@@ -1,0 +1,5 @@
+yt-dlp
+pyTelegramBotAPI
+f2
+aiohttp
+telethon
