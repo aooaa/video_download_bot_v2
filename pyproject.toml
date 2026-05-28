@@ -1,0 +1,18 @@
+[project]
+name = "video-download-bot-v2"
+version = "0.1.0"
+description = "Telegram video downloader bot with YouTube, Douyin, and TikTok support."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp",
+    "f2",
+    "pysocks",
+    "pytelegrambotapi",
+    "requests",
+    "telethon",
+    "yt-dlp",
+]
+
+[tool.uv]
+package = false

@@ -9,9 +9,12 @@ import asyncio
 from telebot.async_telebot import AsyncTeleBot
 from concurrent.futures import ThreadPoolExecutor
 from f2.apps.douyin.handler import DouyinHandler
+from telegram_proxy import configure_bot_api_proxy, describe_telegram_proxy, get_telethon_proxy
 from utils.vp9_detect import process_video
 from utils.dimensions_detect import get_video_dimensions
 from utils.check_file_size import get_file_size
+from utils.tiktok_downloader import download_tiktok_video
+from utils.douyin_downloader import download_douyin_video, get_douyin_video_info
 
 '''
 - 版本变化
@@ -24,10 +27,11 @@ from utils.check_file_size import get_file_size
 
 # Replace with your own Telegram bot token
 #bot = telebot.TeleBot(TOKEN)
+configure_bot_api_proxy()
 bot = AsyncTeleBot(TOKEN)
 
 # tg定义客户端(每个客户端名称需保持不一样)
-client = TelegramClient('test_session_download_bot', api_id, api_hash)
+client = TelegramClient('test_session_download_bot', api_id, api_hash, proxy=get_telethon_proxy())
 
 #youtube下载模块
 executor = ThreadPoolExecutor()
@@ -81,7 +85,7 @@ async def douyin_dl(content):
         html_data = str(await get_video_data(vid[0])) # 使用await关键字
 
         # 获取视频id
-        video_id = re.findall('//www.douyin.com/aweme/v1/play/\?video_id=(.*?)&line=0', html_data)[0]
+        video_id = re.findall(r'//www.douyin.com/aweme/v1/play/\?video_id=(.*?)&line=0', html_data)[0]
         video_url = 'https://www.douyin.com/aweme/v1/play/?video_id=%s&line=0' %(video_id)
         #return video_url
 
@@ -123,8 +127,6 @@ async def get_video_data(id):
 
 #预编译youtube网址匹配
 youtube_url_pattern = re.compile(r'(https?://)?(www\.)?(youtube|youtu)\.(com|cn|com\.cn|be)/\S+')
-
-#预
 
 @bot.message_handler(commands=['start'])
 async def send_welcome(message):
@@ -228,6 +230,7 @@ async def echo_all(message):
 
 async def main():
     # Start polling for updates
+    print(f"Telegram proxy: {describe_telegram_proxy()}")
     await client.start()
     await bot.polling()
 

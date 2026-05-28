@@ -1,9 +1,42 @@
+# Secrets and local credentials
 config.py
-session_download_bot.session
-session_download_bot*
-test_session_download_bot.session
-*.session
-test_session_download_bot*
+*.env
+*.env.*
 youtube_cookies.txt
+*.session
+*.session-journal
+session_download_bot*
+test_session_download_bot*
+
+# Runtime data
+downloads/
 logs/
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache and tooling
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and package caches
+.venv/
+venv/
+env/
+.uv-cache/
+.uv-python/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Archived or local-only source snapshots
 old_main/

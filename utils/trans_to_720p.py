@@ -10,7 +10,7 @@ async def convert_video_to_720p(input_path: str) -> dict:
     command = [
         'ffmpeg',
         '-i', input_path,
-        '-vf', 'scale=ceil(iw*min(720/ih\,1)/2)*2:720',
+        '-vf', r'scale=ceil(iw*min(720/ih\,1)/2)*2:720',
         '-c:a', 'copy',
         output_path
     ]

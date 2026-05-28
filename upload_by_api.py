@@ -3,13 +3,14 @@ import os
 import sys
 # sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from config import *
+from telegram_proxy import get_telethon_proxy
 
 # 定义Telegram API ID和Hash
 #api_id = '25687778'
 #api_hash = 'f05bcb203c68ce7afd2baf66f3db2f57'
 
 # 定义客户端
-client = TelegramClient('session_oracle', api_id, api_hash)
+client = TelegramClient('session_oracle', api_id, api_hash, proxy=get_telethon_proxy())
 
 # 启动客户端
 client.start()
@@ -23,7 +24,7 @@ async def send_video_by_client_api(user, file_path, reply_to=None):
         #print("文件不存在")
         return "An error occurred: file not exist"
     # 发送视频文件，以流媒体方式
-    async with TelegramClient('session_telegram', api_id, api_hash) as client:
+    async with TelegramClient('session_telegram', api_id, api_hash, proxy=get_telethon_proxy()) as client:
         await client.send_file(user, file_path, supports_streaming=True, reply_to=reply_to)
 
 r'''
