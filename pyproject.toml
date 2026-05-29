@@ -11,7 +11,8 @@ dependencies = [
     "pytelegrambotapi",
     "requests",
     "telethon",
-    "yt-dlp",
+    "yt-dlp>=2026.3.17",
+    "yt-dlp-ejs>=0.8.0",
 ]
 
 [tool.uv]

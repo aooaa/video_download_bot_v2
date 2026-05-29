@@ -1,46 +1,99 @@
-## 使用的库
+# Telegram Video Download Bot
 
-f2 - 抖音下载  
-yt-dlp - Youtube下载  
-pyTelegramBotAPI - telegram bot api
+This bot downloads YouTube and Douyin share links back to Telegram, or uploads them to OneDrive / Google Drive through rclone.
 
-## 常用命令
+## Architecture
 
+- `main.py` only handles Telegram commands, menus, and workflow orchestration.
+- `downloaders/` exposes the unified `DownloadService` / `PlatformDownloader` interface.
+- `downloaders/backends/` contains concrete library adapters. Current defaults:
+  - YouTube: `ytdlp`
+  - Douyin: `f2`
+- `services/` handles Telegram sending, compatible video transcoding, and rclone uploads.
+- `storage/` stores per-user drive remote/path settings in SQLite.
+
+To switch a platform implementation later, add or replace a backend adapter and update configuration:
+
+```python
+DOWNLOAD_BACKENDS = {
+    "youtube": "ytdlp",
+    "douyin": "f2",
+}
 ```
-#查看服务状态
-systemctl status assistant_bot.service
 
-#停止和重启服务
-systemctl stop assistant_bot.service
-systemctl restart assistant_bot.service
+## Configuration
 
-#删除开机启动
-systemctl disable assistant_bot.service
+Copy `config_example.py` to `config.py`, then fill in Telegram, Douyin, and rclone settings.
+
+For Douyin, keep `DOUYIN_ENABLE_BARK = False` unless you have configured a valid Bark key. F2 enables Bark notifications in its bundled config, and an empty Bark key can cause noisy `https://api.day.app/` 405 errors during metadata fetches.
+
+YouTube downloads are stricter now. If yt-dlp reports sign-in, bot checks, or anti-abuse errors, export YouTube cookies from your browser and save them as `youtube_cookies.txt`, or configure:
+
+```python
+YOUTUBE_COOKIE_FILE = "youtube_cookies.txt"
 ```
 
-## 配置后台启动
+YouTube signature and `n` challenges also need a JavaScript runtime and the EJS solver. Keep `yt-dlp>=2026.3.17` and `yt-dlp-ejs>=0.8.0` installed, and make sure Node.js is installed or configure:
 
-以`systemd`服务时，telethon需要对工作目录有可写入权限，默认情况下，`Telethon`会在当前工作目录下创建一个以会话名称为文件名的`.session`文件。
+```python
+YOUTUBE_NODE_PATH = r"C:\Program Files\nodejs\node.exe"
+YOUTUBE_REMOTE_COMPONENTS = ["ejs:npm"]
+```
 
-- 你的`systemd`服务配置中没有指定工作目录，因此默认情况下，它会使用根目录（`/`）作为工作目录。根目录通常对非特权用户不可写，甚至可能对`root`用户也有其他限制。
+## Drive Setup
 
-- 你可以通过在服务配置中设置WorkingDirectory来指定一个可写的目录。例如，将会话文件存储在/home/telegram_bot目录中：
+Drive OAuth is handled by rclone. The bot does not store OAuth tokens.
 
-  创建一个名为`assistant_bot.service`的服务文件
+1. Authorize a remote with rclone, such as `Onedrive-P` or `GoogleDrive-P`.
+2. Bind it in the bot:
 
-  ```
-  [Unit]
-  Description=My Python Telegram Assistant Bot Service
-  
-  [Service]
-  Type=simple
-  WorkingDirectory=/home/telegram_bot
-  ExecStart=/home/telegram_bot/.venv/bin/python /home/telegram_bot/main.py
-  Restart=always
-  User=0
-  Group=0
-  
-  [Install]
-  ```
+```text
+/binddrive onedrive Onedrive-P Downloads
+/binddrive googledrive GoogleDrive-P Downloads
+```
 
-  
+3. Update upload path:
+
+```text
+/setdrivepath onedrive Videos/Douyin
+```
+
+4. Delete a bot binding:
+
+```text
+/deletedrive onedrive
+```
+
+This only removes the SQLite binding. It does not remove the rclone remote.
+
+## Bot Commands
+
+- `/start` shows the introduction.
+- `/menu` or `/settings` opens the drive settings menu.
+- Send a YouTube/Douyin link directly to download and send it back to the current chat.
+- `/send2onedrive <url>` downloads and uploads to the bound OneDrive remote/path.
+- `/send2googledrive <url>` downloads and uploads to the bound Google Drive remote/path.
+
+## Telegram Size Rules
+
+- Under 50MB: upload through the Bot API.
+- 50MB to 2GB: upload through TelegramClient.
+- Over 2GB: reply with `文件大小超过2G,无法上传!`
+
+## systemd Notes
+
+Telethon creates a `.session` file in the working directory. Set a writable `WorkingDirectory` when running under systemd.
+
+```ini
+[Unit]
+Description=Telegram Video Download Bot
+
+[Service]
+Type=simple
+WorkingDirectory=/home/telegram_bot
+ExecStart=/home/telegram_bot/.venv/bin/python /home/telegram_bot/main.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```

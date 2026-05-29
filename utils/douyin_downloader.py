@@ -54,14 +54,7 @@ async def download_douyin_video(url: str, kwargs: dict):
             await downloader.create_download_tasks(
                 kwargs,
                 aweme_datas=video_data._to_dict(),
-                user_path=str(user_path),
-            )
-            
-            # 处理下载任务
-            await downloader.handler_download(
-                kwargs,
-                aweme_datas=video_data._to_dict(),
-                user_path=str(user_path),
+                user_path=user_path,
             )
         
         # 构建预期的文件路径
@@ -150,14 +143,7 @@ async def download_douyin_user_videos(sec_user_id: str, kwargs: dict, max_count:
                     await downloader.create_download_tasks(
                         kwargs,
                         aweme_datas=aweme_data,
-                        user_path=str(user_path),
-                    )
-                    
-                    # 处理下载任务
-                    await downloader.handler_download(
-                        kwargs,
-                        aweme_datas=aweme_data,
-                        user_path=str(user_path),
+                        user_path=user_path,
                     )
                     
                     # 找到下载的文件

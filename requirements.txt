@@ -1,4 +1,5 @@
-yt-dlp
+yt-dlp>=2026.3.17
+yt-dlp-ejs>=0.8.0
 pyTelegramBotAPI
 f2
 aiohttp
