@@ -1,6 +1,6 @@
 # Telegram Video Download Bot
 
-This bot downloads YouTube and Douyin share links back to Telegram, or uploads them to OneDrive / Google Drive through rclone.
+This bot downloads YouTube, Douyin, and TikTok share links back to Telegram, or uploads them to OneDrive / Google Drive through rclone.
 
 ## Architecture
 
@@ -9,6 +9,7 @@ This bot downloads YouTube and Douyin share links back to Telegram, or uploads t
 - `downloaders/backends/` contains concrete library adapters. Current defaults:
   - YouTube: `ytdlp`
   - Douyin: `f2`
+  - TikTok: `f2`
 - `services/` handles Telegram sending, compatible video transcoding, and rclone uploads.
 - `storage/` stores per-user drive remote/path settings in SQLite.
 
@@ -18,6 +19,7 @@ To switch a platform implementation later, add or replace a backend adapter and 
 DOWNLOAD_BACKENDS = {
     "youtube": "ytdlp",
     "douyin": "f2",
+    "tiktok": "f2",
 }
 ```
 
@@ -26,6 +28,14 @@ DOWNLOAD_BACKENDS = {
 Copy `config_example.py` to `config.py`, then fill in Telegram, Douyin, and rclone settings.
 
 For Douyin, keep `DOUYIN_ENABLE_BARK = False` unless you have configured a valid Bark key. F2 enables Bark notifications in its bundled config, and an empty Bark key can cause noisy `https://api.day.app/` 405 errors during metadata fetches.
+
+For TikTok, export cookies from a logged-in browser session and save the cookie string as `tiktok_cookies.txt` if F2 reports auth, token, region, or rate-limit errors. You can also configure a custom path:
+
+```python
+TIKTOK_COOKIE_FILE = "tiktok_cookies.txt"
+```
+
+When TikTok cookies expire, export fresh cookies and replace this file. Do not commit `tiktok_cookies.txt` to Git. The TikTok F2 adapter is lazy-loaded so the bot can still start even when TikTok token generation fails until a TikTok link is requested.
 
 YouTube downloads are stricter now. If yt-dlp reports sign-in, bot checks, or anti-abuse errors, export YouTube cookies from your browser and save them as `youtube_cookies.txt`, or configure:
 
@@ -70,7 +80,7 @@ This only removes the SQLite binding. It does not remove the rclone remote.
 
 - `/start` shows the introduction.
 - `/menu` or `/settings` opens the drive settings menu.
-- Send a YouTube/Douyin link directly to download and send it back to the current chat.
+- Send a YouTube/Douyin/TikTok link directly to download and send it back to the current chat.
 - `/send2onedrive <url>` downloads and uploads to the bound OneDrive remote/path.
 - `/send2googledrive <url>` downloads and uploads to the bound Google Drive remote/path.
 

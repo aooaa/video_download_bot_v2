@@ -25,10 +25,14 @@ class DummyVideo:
         }
 
 
+def fake_format_file_name(naming_template: str, aweme_data: dict) -> str:
+    return f"{aweme_data['create_time']}_{aweme_data['desc']}"
+
+
 @pytest.mark.asyncio
-async def test_douyin_f2_uses_create_tasks_and_returns_existing_file(monkeypatch, tmp_path: Path):
+async def test_douyin_f2_uses_create_tasks_and_returns_existing_file(tmp_path: Path):
     aweme_data = DummyVideo()._to_dict()
-    base_name = douyin_f2.format_file_name("{create}_{desc}", aweme_data)
+    base_name = fake_format_file_name("{create}_{desc}", aweme_data)
     existing_file = tmp_path / f"{base_name}_video.mp4"
     existing_file.write_bytes(b"already downloaded")
 
@@ -50,12 +54,20 @@ async def test_douyin_f2_uses_create_tasks_and_returns_existing_file(monkeypatch
         async def create_download_tasks(self, kwargs, aweme_datas, user_path):
             assert isinstance(user_path, Path)
 
-    monkeypatch.setattr(douyin_f2, "extract_valid_urls", lambda urls: ["https://v.douyin.com/test/"])
-    monkeypatch.setattr(douyin_f2.AwemeIdFetcher, "get_aweme_id", fake_get_aweme_id)
-    monkeypatch.setattr(douyin_f2, "DouyinHandler", FakeHandler)
-    monkeypatch.setattr(douyin_f2, "DouyinDownloader", FakeDownloader)
+    class FakeAwemeIdFetcher:
+        get_aweme_id = staticmethod(fake_get_aweme_id)
 
-    result = await douyin_f2.DouyinF2Downloader().download(
+    class TestDownloader(douyin_f2.DouyinF2Downloader):
+        def _load_f2(self):
+            return (
+                FakeHandler,
+                FakeDownloader,
+                FakeAwemeIdFetcher,
+                fake_format_file_name,
+                lambda urls: ["https://v.douyin.com/test/"],
+            )
+
+    result = await TestDownloader().download(
         "https://v.douyin.com/test/",
         DownloadContext(output_dir=tmp_path, config=DummyConfig()),
     )

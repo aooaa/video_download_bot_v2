@@ -3,6 +3,7 @@ config.py
 *.env
 *.env.*
 youtube_cookies.txt
+tiktok_cookies.txt
 *.session
 *.session-journal
 session_download_bot*

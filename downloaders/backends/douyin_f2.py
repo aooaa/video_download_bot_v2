@@ -1,11 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-
-from f2.apps.douyin.dl import DouyinDownloader
-from f2.apps.douyin.handler import DouyinHandler
-from f2.apps.douyin.utils import AwemeIdFetcher, format_file_name
-from f2.utils.utils import extract_valid_urls
+from typing import Any
 
 from downloaders.base import DownloadContext, DownloadResult, MediaFile
 
@@ -25,6 +21,7 @@ class DouyinF2Downloader:
         result.add_progress("Douyin link detected.")
 
         try:
+            DouyinHandler, DouyinDownloader, AwemeIdFetcher, format_file_name, extract_valid_urls = self._load_f2()
             valid_urls = extract_valid_urls([url])
             resolved_url = valid_urls[0] if valid_urls else url
             aweme_id = await AwemeIdFetcher.get_aweme_id(resolved_url)
@@ -58,7 +55,12 @@ class DouyinF2Downloader:
             )
             files = self._new_files(context.output_dir, before)
             if not files:
-                files = self._existing_files_for_aweme(context.output_dir, aweme_data, kwargs)
+                files = self._existing_files_for_aweme(
+                    context.output_dir,
+                    aweme_data,
+                    kwargs,
+                    format_file_name,
+                )
             result.files.extend(self._to_media_files(files, aweme_data, result.title))
 
             if not result.files:
@@ -76,6 +78,14 @@ class DouyinF2Downloader:
         except Exception as exc:
             result.error = f"Douyin download failed: {exc}"
             return result
+
+    def _load_f2(self) -> tuple[Any, Any, Any, Any, Any]:
+        from f2.apps.douyin.dl import DouyinDownloader
+        from f2.apps.douyin.handler import DouyinHandler
+        from f2.apps.douyin.utils import AwemeIdFetcher, format_file_name
+        from f2.utils.utils import extract_valid_urls
+
+        return DouyinHandler, DouyinDownloader, AwemeIdFetcher, format_file_name, extract_valid_urls
 
     def _build_kwargs(self, context: DownloadContext) -> dict:
         kwargs = dict(getattr(context.config, "kwargs", {}) or {})
@@ -96,7 +106,7 @@ class DouyinF2Downloader:
         after = [path.resolve() for path in root.rglob("*") if path.is_file()]
         return sorted((path for path in after if path not in before), key=lambda item: item.stat().st_mtime)
 
-    def _existing_files_for_aweme(self, root: Path, aweme_data: dict, kwargs: dict) -> list[Path]:
+    def _existing_files_for_aweme(self, root: Path, aweme_data: dict, kwargs: dict, format_file_name) -> list[Path]:
         if not root.exists():
             return []
 

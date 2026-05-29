@@ -9,6 +9,7 @@ YOUTUBE_RE = re.compile(
     re.IGNORECASE,
 )
 DOUYIN_RE = re.compile(r"(douyin\.com|iesdouyin\.com|v\.douyin\.com)", re.IGNORECASE)
+TIKTOK_RE = re.compile(r"(tiktok\.com|vt\.tiktok\.com|vm\.tiktok\.com)", re.IGNORECASE)
 
 
 def extract_first_url(text: str) -> str | None:
@@ -24,4 +25,6 @@ def detect_platform(text_or_url: str) -> str | None:
         return "youtube"
     if DOUYIN_RE.search(url):
         return "douyin"
+    if TIKTOK_RE.search(url):
+        return "tiktok"
     return None

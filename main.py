@@ -138,7 +138,7 @@ async def send_welcome(message) -> None:
     await bot.reply_to(
         message,
         "Hi, welcome to the Video Downloader Bot.\n"
-        "Send a YouTube or Douyin link to download it to this chat.\n"
+        "Send a YouTube, Douyin, or TikTok link to download it to this chat.\n"
         "Use /menu to manage OneDrive and Google Drive uploads.",
     )
 

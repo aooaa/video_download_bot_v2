@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import asyncio
 
 from downloaders.base import DownloadContext, MediaFile
+from downloaders.backends.tiktok_f2 import TiktokF2Downloader
 from downloaders.backends.ytdlp_backend import YoutubeYtDlpDownloader
 from downloaders.registry import DownloaderRegistry
 from downloaders.router import detect_platform, extract_first_url
@@ -19,6 +20,8 @@ def test_router_detects_supported_platforms():
     assert detect_platform("https://www.youtube.com/watch?v=abc") == "youtube"
     assert detect_platform("https://youtu.be/abc") == "youtube"
     assert detect_platform("https://v.douyin.com/abc/") == "douyin"
+    assert detect_platform("https://www.tiktok.com/@user/video/7123456789012345678") == "tiktok"
+    assert detect_platform("https://vt.tiktok.com/ZSYabc/") == "tiktok"
     assert detect_platform("hello") is None
 
 
@@ -48,6 +51,16 @@ def test_youtube_backend_enables_node_and_ejs_fallback(tmp_path: Path, monkeypat
         "best[height<=1600]"
     )
     assert "format_sort" not in opts
+
+
+def test_tiktok_backend_extracts_video_id_without_importing_f2():
+    downloader = TiktokF2Downloader()
+
+    assert (
+        downloader._extract_aweme_id("https://www.tiktok.com/@user/video/7123456789012345678")
+        == "7123456789012345678"
+    )
+    assert downloader._extract_aweme_id("https://vt.tiktok.com/ZSYabc/") is None
 
 
 def test_media_service_keeps_h264_and_hevc_without_transcoding(tmp_path: Path, monkeypatch):

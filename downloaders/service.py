@@ -4,18 +4,20 @@ from pathlib import Path
 
 from .base import DownloadContext, DownloadResult, DownloadTarget
 from .backends.douyin_f2 import DouyinF2Downloader
+from .backends.tiktok_f2 import TiktokF2Downloader
 from .backends.ytdlp_backend import YoutubeYtDlpDownloader
 from .registry import DownloaderRegistry
 from .router import detect_platform, extract_first_url
 
 
-DEFAULT_BACKENDS = {"youtube": "ytdlp", "douyin": "f2"}
+DEFAULT_BACKENDS = {"youtube": "ytdlp", "douyin": "f2", "tiktok": "f2"}
 
 
 def create_default_registry() -> DownloaderRegistry:
     registry = DownloaderRegistry()
     registry.register("youtube", "ytdlp", YoutubeYtDlpDownloader)
     registry.register("douyin", "f2", DouyinF2Downloader)
+    registry.register("tiktok", "f2", TiktokF2Downloader)
     return registry
 
 
@@ -41,7 +43,7 @@ class DownloadService:
                 platform="unknown",
                 backend="none",
                 url=url,
-                error="Unsupported URL. Currently supported: YouTube and Douyin.",
+                error="Unsupported URL. Currently supported: YouTube, Douyin, and TikTok.",
             )
 
         backend_name = self.backends.get(platform)

@@ -25,6 +25,7 @@ CLEANUP_DOWNLOADS = True
 DOWNLOAD_BACKENDS = {
     "youtube": "ytdlp",
     "douyin": "f2",
+    "tiktok": "f2",
 }
 
 # YouTube: export browser cookies here when yt-dlp reports sign-in, bot checks, or anti-abuse errors.
@@ -67,4 +68,21 @@ kwargs = {
     },
     "cookie": cookie_value,
     "proxies": {"http://": None, "https://": None},
+}
+
+# TikTok F2 backend. TikTok usually needs a valid browser cookie.
+# Export cookies from a logged-in browser session if F2 reports auth, token,
+# or region/rate-limit errors, then save them to this file.
+TIKTOK_ENABLE_BARK = False
+TIKTOK_COOKIE_FILE = "tiktok_cookies.txt"
+TIKTOK_PROXIES = {"http://": None, "https://": None}
+TIKTOK_KWARGS = {
+    "mode": "one",
+    "naming": "{create}_{desc}",
+    "interval": "all",
+    "folderize": False,
+    "music": False,
+    "cover": False,
+    "desc": False,
+    "proxies": TIKTOK_PROXIES,
 }
