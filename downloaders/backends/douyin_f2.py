@@ -93,7 +93,47 @@ class DouyinF2Downloader:
         kwargs.setdefault("naming", "{create}_{desc}")
         kwargs.setdefault("interval", "all")
         kwargs.setdefault("folderize", False)
+        cookie = self._read_cookie_file(context)
+        if cookie:
+            kwargs["cookie"] = cookie
+        else:
+            legacy_cookie = getattr(context.config, "DOUYIN_COOKIE", None)
+            if legacy_cookie is not None:
+                kwargs["cookie"] = legacy_cookie
+            else:
+                kwargs.pop("cookie", None)
         return kwargs
+
+    def _read_cookie_file(self, context: DownloadContext) -> str | None:
+        cookie_file = getattr(context.config, "DOUYIN_COOKIE_FILE", "douyin_cookies.txt")
+        if not cookie_file:
+            return None
+
+        cookie_path = Path(cookie_file)
+        if not cookie_path.exists():
+            return None
+
+        cookie = cookie_path.read_text(encoding="utf-8-sig").strip()
+        return self._normalize_cookie_text(cookie)
+
+    def _normalize_cookie_text(self, cookie: str) -> str | None:
+        if not cookie:
+            return None
+        cookie = cookie.replace("\ufeff", "").strip()
+        if cookie.startswith("# Netscape HTTP Cookie File") or "\t" in cookie:
+            pairs: list[str] = []
+            for line in cookie.splitlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                parts = line.split("\t")
+                if len(parts) >= 7:
+                    name = parts[-2].strip()
+                    value = parts[-1].strip()
+                    if name:
+                        pairs.append(f"{name}={value}")
+            return "; ".join(pairs) or None
+        return " ".join(cookie.splitlines()).strip() or None
 
     def _snapshot(self, root: Path) -> set[Path]:
         if not root.exists():

@@ -9,7 +9,6 @@ from downloaders.backends import douyin_f2
 class DummyConfig:
     DOUYIN_ENABLE_BARK = False
     kwargs = {
-        "cookie": "dummy-cookie",
         "naming": "{create}_{desc}",
     }
 
@@ -75,3 +74,62 @@ async def test_douyin_f2_uses_create_tasks_and_returns_existing_file(tmp_path: P
     assert result.ok
     assert result.files[0].path == existing_file.resolve()
     assert result.files[0].media_type == "video"
+
+
+def test_douyin_f2_build_kwargs_reads_cookie_file_before_legacy_values(tmp_path: Path):
+    cookie_file = tmp_path / "douyin_cookies.txt"
+    cookie_file.write_text("file-cookie\n", encoding="utf-8")
+
+    context = DownloadContext(
+        output_dir=tmp_path,
+        config=type(
+            "Config",
+            (),
+            {
+                "DOUYIN_COOKIE_FILE": str(cookie_file),
+                "DOUYIN_COOKIE": "legacy-cookie",
+                "kwargs": {"cookie": "kwargs-cookie"},
+            },
+        )(),
+    )
+
+    kwargs = douyin_f2.DouyinF2Downloader()._build_kwargs(context)
+
+    assert kwargs["cookie"] == "file-cookie"
+
+
+def test_douyin_f2_reads_netscape_cookie_file_as_cookie_header(tmp_path: Path):
+    cookie_file = tmp_path / "douyin_cookies.txt"
+    cookie_file.write_text(
+        "\n".join(
+            [
+                "# Netscape HTTP Cookie File",
+                ".douyin.com\tTRUE\t/\tTRUE\t0\tmsToken\tabc",
+                ".douyin.com\tTRUE\t/\tTRUE\t0\tttwid\txyz",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    context = DownloadContext(
+        output_dir=tmp_path,
+        config=type("Config", (), {"DOUYIN_COOKIE_FILE": str(cookie_file), "kwargs": {}})(),
+    )
+
+    kwargs = douyin_f2.DouyinF2Downloader()._build_kwargs(context)
+
+    assert kwargs["cookie"] == "msToken=abc; ttwid=xyz"
+
+
+def test_douyin_f2_strips_utf8_bom_from_cookie_file(tmp_path: Path):
+    cookie_file = tmp_path / "douyin_cookies.txt"
+    cookie_file.write_text("\ufeffbd_ticket_guard_client_web_domain=2\n", encoding="utf-8")
+
+    context = DownloadContext(
+        output_dir=tmp_path,
+        config=type("Config", (), {"DOUYIN_COOKIE_FILE": str(cookie_file), "kwargs": {}})(),
+    )
+
+    kwargs = douyin_f2.DouyinF2Downloader()._build_kwargs(context)
+
+    assert kwargs["cookie"] == "bd_ticket_guard_client_web_domain=2"

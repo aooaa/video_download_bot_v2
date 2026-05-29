@@ -27,7 +27,13 @@ DOWNLOAD_BACKENDS = {
 
 Copy `config_example.py` to `config.py`, then fill in Telegram, Douyin, and rclone settings.
 
-For Douyin, keep `DOUYIN_ENABLE_BARK = False` unless you have configured a valid Bark key. F2 enables Bark notifications in its bundled config, and an empty Bark key can cause noisy `https://api.day.app/` 405 errors during metadata fetches.
+For Douyin, export cookies from a logged-in browser session and save the cookie string as `douyin_cookies.txt`. You can also configure a custom path:
+
+```python
+DOUYIN_COOKIE_FILE = "douyin_cookies.txt"
+```
+
+When Douyin cookies expire, export fresh cookies and replace this file. Do not commit `douyin_cookies.txt` to Git. Keep `DOUYIN_ENABLE_BARK = False` unless you have configured a valid Bark key. F2 enables Bark notifications in its bundled config, and an empty Bark key can cause noisy `https://api.day.app/` 405 errors during metadata fetches.
 
 For TikTok, export cookies from a logged-in browser session and save the cookie string as `tiktok_cookies.txt` if F2 reports auth, token, region, or rate-limit errors. You can also configure a custom path:
 

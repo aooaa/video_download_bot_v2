@@ -42,10 +42,11 @@ RCLONE_PATH = "rclone"
 BOT_SETTINGS_DB = "bot_settings.db"
 
 # Douyin cookie and user-agent for F2 backend.
+# Export cookies from a logged-in browser session, then save them to this file.
 # F2 ships with Bark notifications enabled in its own config. Keep this False
 # unless you have configured a valid Bark key and want F2 download notifications.
 DOUYIN_ENABLE_BARK = False
-cookie_value = "YOUR_DOUYIN_COOKIE_HERE"
+DOUYIN_COOKIE_FILE = "douyin_cookies.txt"
 user_agent = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -53,7 +54,6 @@ user_agent = (
 )
 
 HEADERS = {
-    "cookie": cookie_value,
     "user-agent": user_agent,
 }
 
@@ -66,7 +66,6 @@ kwargs = {
         "User-Agent": user_agent,
         "Referer": "https://www.douyin.com/",
     },
-    "cookie": cookie_value,
     "proxies": {"http://": None, "https://": None},
 }
 
