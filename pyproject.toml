@@ -8,6 +8,7 @@ dependencies = [
     "aiohttp",
     "f2",
     "pysocks",
+    "python-dotenv",
     "pytelegrambotapi",
     "requests",
     "telethon",

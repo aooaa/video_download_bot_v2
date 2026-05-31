@@ -1,0 +1,98 @@
+from __future__ import annotations
+
+import os
+
+
+def _bool_env(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _list_env(name: str, default: list[str]) -> list[str]:
+    value = os.environ.get(name)
+    if not value:
+        return default
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+# Telegram Bot API token.
+TOKEN = os.environ["BOT_TOKEN"]
+
+# Telegram client API values from https://my.telegram.org.
+api_id = int(os.environ["TELEGRAM_API_ID"])
+api_hash = os.environ["TELEGRAM_API_HASH"]
+
+# Optional target used by Telethon for files larger than the Bot API limit.
+username = os.environ.get("TELEGRAM_LARGE_FILE_TARGET") or None
+TELETHON_SESSION = os.environ.get("TELETHON_SESSION", "session_download_bot")
+
+# Download service.
+DOWNLOAD_DIR = os.environ.get("DOWNLOAD_DIR", "downloads")
+CLEANUP_DOWNLOADS = _bool_env("CLEANUP_DOWNLOADS", True)
+DOWNLOAD_BACKENDS = {
+    "youtube": os.environ.get("YOUTUBE_BACKEND", "ytdlp"),
+    "douyin": os.environ.get("DOUYIN_BACKEND", "f2"),
+    "tiktok": os.environ.get("TIKTOK_BACKEND", "f2"),
+}
+
+# YouTube.
+YOUTUBE_COOKIE_FILE = os.environ.get(
+    "YOUTUBE_COOKIE_FILE",
+    "/etc/video-download-bot/youtube_cookies.txt",
+)
+YOUTUBE_NODE_PATH = os.environ.get("YOUTUBE_NODE_PATH") or None
+YOUTUBE_REMOTE_COMPONENTS = _list_env("YOUTUBE_REMOTE_COMPONENTS", ["ejs:npm"])
+
+# rclone integration for OneDrive / Google Drive.
+RCLONE_PATH = os.environ.get("RCLONE_PATH", "rclone")
+BOT_SETTINGS_DB = os.environ.get("BOT_SETTINGS_DB", "bot_settings.db")
+
+# Douyin cookie and user-agent for F2 backend.
+DOUYIN_ENABLE_BARK = _bool_env("DOUYIN_ENABLE_BARK", False)
+DOUYIN_COOKIE_FILE = os.environ.get(
+    "DOUYIN_COOKIE_FILE",
+    "/etc/video-download-bot/douyin_cookies.txt",
+)
+user_agent = os.environ.get(
+    "USER_AGENT",
+    "Mozilla/5.0 (X11; Linux x86_64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/126.0.0.0 Safari/537.36",
+)
+
+HEADERS = {
+    "user-agent": user_agent,
+}
+
+kwargs = {
+    "mode": "one",
+    "naming": "{create}_{desc}",
+    "interval": "all",
+    "folderize": False,
+    "headers": {
+        "User-Agent": user_agent,
+        "Referer": "https://www.douyin.com/",
+    },
+    "proxies": {"http://": None, "https://": None},
+}
+
+# TikTok remains configurable, although the current refactor focus is YouTube
+# and Douyin.
+TIKTOK_ENABLE_BARK = _bool_env("TIKTOK_ENABLE_BARK", False)
+TIKTOK_COOKIE_FILE = os.environ.get(
+    "TIKTOK_COOKIE_FILE",
+    "/etc/video-download-bot/tiktok_cookies.txt",
+)
+TIKTOK_PROXIES = {"http://": None, "https://": None}
+TIKTOK_KWARGS = {
+    "mode": "one",
+    "naming": "{create}_{desc}",
+    "interval": "all",
+    "folderize": False,
+    "music": False,
+    "cover": False,
+    "desc": False,
+    "proxies": TIKTOK_PROXIES,
+}

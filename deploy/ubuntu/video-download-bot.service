@@ -1,0 +1,23 @@
+[Unit]
+Description=Telegram Video Download Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=video-bot
+Group=video-bot
+WorkingDirectory=/opt/video-download-bot
+EnvironmentFile=-/etc/video-download-bot/video-download-bot.env
+Environment=APP_DIR=/opt/video-download-bot
+Environment=ENV_FILE=/etc/video-download-bot/video-download-bot.env
+ExecStart=/opt/video-download-bot/deploy/ubuntu/run.sh
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

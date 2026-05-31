@@ -2,6 +2,7 @@
 config.py
 *.env
 *.env.*
+!.env.example
 youtube_cookies.txt
 douyin_cookies.txt
 tiktok_cookies.txt

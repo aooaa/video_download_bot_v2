@@ -4,3 +4,4 @@ pyTelegramBotAPI
 f2
 aiohttp
 telethon
+python-dotenv
