@@ -10,6 +10,9 @@ VIDEO_TYPES = {0, 55, 61, 109, 201}
 IMAGE_TYPE = 68
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".m4v", ".webm"}
+AUDIO_EXTENSIONS = {".mp3", ".m4a", ".aac", ".wav"}
+TEXT_EXTENSIONS = {".txt", ".lrc"}
+MEDIA_EXTENSIONS = IMAGE_EXTENSIONS | VIDEO_EXTENSIONS | AUDIO_EXTENSIONS | TEXT_EXTENSIONS
 
 
 class DouyinF2Downloader:
@@ -61,6 +64,23 @@ class DouyinF2Downloader:
                     kwargs,
                     format_file_name,
                 )
+            if not files:
+                result.add_progress("F2 produced no file; trying metadata media fallback.")
+                await self._download_from_aweme_media(
+                    downloader,
+                    kwargs,
+                    aweme_data,
+                    context.output_dir,
+                    format_file_name,
+                )
+                files = self._new_files(context.output_dir, before)
+                if not files:
+                    files = self._existing_files_for_aweme(
+                        context.output_dir,
+                        aweme_data,
+                        kwargs,
+                        format_file_name,
+                    )
             result.files.extend(self._to_media_files(files, aweme_data, result.title))
 
             if not result.files:
@@ -144,7 +164,10 @@ class DouyinF2Downloader:
         if not root.exists():
             return []
         after = [path.resolve() for path in root.rglob("*") if path.is_file()]
-        return sorted((path for path in after if path not in before), key=lambda item: item.stat().st_mtime)
+        return sorted(
+            (path for path in after if path not in before and path.suffix.lower() in MEDIA_EXTENSIONS),
+            key=lambda item: item.stat().st_mtime,
+        )
 
     def _existing_files_for_aweme(self, root: Path, aweme_data: dict, kwargs: dict, format_file_name) -> list[Path]:
         if not root.exists():
@@ -155,10 +178,39 @@ class DouyinF2Downloader:
             path.resolve()
             for path in root.rglob("*")
             if path.is_file()
-            and path.suffix.lower() in IMAGE_EXTENSIONS | VIDEO_EXTENSIONS
-            and path.stem.startswith(f"{base_name}_")
+            and path.suffix.lower() in MEDIA_EXTENSIONS
+            and (path.stem.startswith(f"{base_name}_") or path.parent.name == base_name)
         ]
         return sorted(candidates, key=lambda item: item.stat().st_mtime)
+
+    async def _download_from_aweme_media(
+        self,
+        downloader,
+        kwargs: dict,
+        aweme_data: dict,
+        output_dir: Path,
+        format_file_name,
+    ) -> None:
+        base_name = format_file_name(kwargs.get("naming", "{create}_{desc}"), aweme_data)
+        base_path = output_dir / base_name if kwargs.get("folderize") else output_dir
+
+        video_url = aweme_data.get("video_play_addr")
+        if video_url:
+            await downloader.initiate_download("视频", video_url, base_path, f"{base_name}_video", ".mp4")
+
+        for index, live_url in enumerate(aweme_data.get("images_video") or [], start=1):
+            if live_url:
+                await downloader.initiate_download("实况", live_url, base_path, f"{base_name}_live_{index}", ".mp4")
+
+        for index, image_url in enumerate(aweme_data.get("images") or [], start=1):
+            if image_url:
+                await downloader.initiate_download("图集", image_url, base_path, f"{base_name}_image_{index}", ".webp")
+
+        music_url = aweme_data.get("music_play_url")
+        if music_url and not video_url:
+            await downloader.initiate_download("原声", music_url, base_path, f"{base_name}_music", ".mp3")
+
+        await downloader.execute_tasks()
 
     def _to_media_files(self, files: list[Path], aweme_data: dict, title: str | None) -> list[MediaFile]:
         media_files: list[MediaFile] = []
