@@ -113,6 +113,13 @@ class DouyinF2Downloader:
         kwargs.setdefault("naming", "{create}_{desc}")
         kwargs.setdefault("interval", "all")
         kwargs.setdefault("folderize", False)
+        # F2 0.0.1.7 omits the header required by Douyin's Argus gateway.
+        # The current gateway accepts this marker; preserve explicit overrides
+        # in case its requirements change. Copy headers to avoid mutating config.
+        headers = dict(kwargs.get("headers") or {})
+        if not any(name.lower() == "x-tt-argus" for name in headers):
+            headers["x-tt-argus"] = "1"
+        kwargs["headers"] = headers
         cookie = self._read_cookie_file(context)
         if cookie:
             kwargs["cookie"] = cookie

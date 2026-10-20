@@ -24,6 +24,23 @@ class DummyVideo:
         }
 
 
+def test_douyin_f2_adds_argus_header_without_mutating_config(tmp_path: Path):
+    headers = {"User-Agent": "test-browser"}
+    config = type("Config", (), {"kwargs": {"headers": headers}, "DOUYIN_COOKIE_FILE": None})()
+    kwargs = douyin_f2.DouyinF2Downloader()._build_kwargs(DownloadContext(tmp_path, config))
+    assert kwargs["headers"]["x-tt-argus"] == "1"
+    assert headers == {"User-Agent": "test-browser"}
+
+
+def test_douyin_f2_preserves_explicit_argus_header(tmp_path: Path):
+    config = type("Config", (), {
+        "kwargs": {"headers": {"X-Tt-Argus": "configured-marker"}},
+        "DOUYIN_COOKIE_FILE": None,
+    })()
+    kwargs = douyin_f2.DouyinF2Downloader()._build_kwargs(DownloadContext(tmp_path, config))
+    assert kwargs["headers"] == {"X-Tt-Argus": "configured-marker"}
+
+
 def fake_format_file_name(naming_template: str, aweme_data: dict) -> str:
     return f"{aweme_data['create_time']}_{aweme_data['desc']}"
 
